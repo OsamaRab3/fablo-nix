@@ -9,37 +9,27 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      
-      # Package configuration - easy to update
-      fabloConfig = {
-        pname = "fablo";
-        version = "2.6.0";
-        src = {
-          url = "https://github.com/hyperledger-labs/fablo/releases/download/${fabloConfig.version}/fablo.sh";
-          sha256 = "1qnyp55d3kksfwdgla2l07j2slcm9iwyzmwaq0ijbyfpm9cgdqn3";
-        };
-      };
     in
     {
       packages.${system} = {
-        fablo = pkgs.stdenv.mkDerivation {
-          pname = fabloConfig.pname;
-          version = fabloConfig.version;
+        fablo = pkgs.stdenv.mkDerivation rec {
+          pname = "fablo";
+          version = "2.6.0";
 
           src = pkgs.fetchurl {
-            url = fabloConfig.src.url;
-            sha256 = fabloConfig.src.sha256;
+            url = "https://github.com/hyperledger-labs/fablo/releases/download/${version}/fablo.sh";
+            sha256 = "1qnyp55d3kksfwdgla2l07j2slcm9iwyzmwaq0ijbyfpm9cgdqn3";
           };
 
           dontUnpack = true;
 
-          buildInputs = [ pkgs.bash pkgs.docker ];
+          nativeBuildInputs = [ pkgs.bash ];
 
           installPhase = ''
             mkdir -p $out/bin
             cp $src $out/bin/fablo
             chmod +x $out/bin/fablo
-            
+
             # Patch the shebang to use nix's bash
             sed -i '1s|/usr/bin/env bash|${pkgs.bash}/bin/bash|' $out/bin/fablo
           '';
